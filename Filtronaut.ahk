@@ -106,8 +106,7 @@ LaunchGUI:
 	else
 		FilterMode := "openWindows"
 
-	Gui, +AlwaysOnTop +ToolWindow
-	Gui, +LastFound
+	Gui, +AlwaysOnTop +ToolWindow +LastFound
 	Gui, Font, s10
 	Gui, Add, Edit, x10 y10 w280 vSearchInput gUpdateList
 	Gui, Add, Checkbox, x+10 yp w50 h22 vCaseToggle gToggleCase, case
@@ -436,8 +435,7 @@ Selection:
 				}
 		}
 	}
-	if (windowId) {
-		monitorNr := action.monitor
+	if (windowId && action.monitor) {
 		dim := StrSplit(action.dimensions, ",", " ")
 		; MsgBox hotkey %Hotkey%, action %action% --> Config.Actions["!1"] :: %monitorNr% ::: %dim%, 3
 		SysGet, MonitorCount, MonitorCount
@@ -541,6 +539,8 @@ HandleModeHotkey:
 !m::
 	Gosub, HandleModeHotkey
 	return
+
+^Esc:: Gosub, ExitApp
 
 ~Enter:: Gosub, selection
 !1:: Gosub, selection
@@ -732,4 +732,5 @@ GuiClose:
 #IfWinActive
 
 ExitApp:
+	Gosub, CheckPendingSaves
 ExitApp
