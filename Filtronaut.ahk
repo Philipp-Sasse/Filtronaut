@@ -159,7 +159,7 @@ How to Use:
  - Press Down and Up to navigate the list
  - Press Return to run or bring to front the current selection
  - Press Alt-1 to maximise the current selection on screen 1 (more keys configurable)
- - Press Esc to close the Filtronaut window
+ - Press Esc to close the Filtronaut window or Ctrl-Esc to exit the app
 
 Modes:
  - Alt-O to switch between your (O)pen windows (default)
@@ -181,6 +181,11 @@ Shortcuts:
 return
 
 ;====================
+IsRecentBased(mode) {
+	 ;global Config
+	return  Config.Modes.HasKey(mode) || mode = "Directories"
+}
+
 ModeChanged:
 {
 	Gosub, CheckPendingSaves
@@ -194,8 +199,7 @@ ModeChanged:
 			if (line != "")
 				CachedList.Push({title: line, path: path})
 		}
-	}
-	else if (Config.Modes.HasKey(FilterMode)) {
+	} else if IsRecentBased(FilterMode) {
 		GuiControl, , ModeSelector, filtering ...
 		GuiControl, ChooseString, ModeSelector, filtering ...
 		Gosub, UpdateList
@@ -345,7 +349,7 @@ UpdateList:
 				 GuiControl,, WindowBox, % item.title
 			 }
 		 }
-	 } else if (Filtermode = "Directories" || Config.Modes.HasKey(FilterMode)) { ; recentItems-based filters
+	} else if IsRecentBased(FilterMode) {
 		filterRegex := Config.Modes[FilterMode]
 
 		recentFolder := A_AppData "\Microsoft\Windows\Recent"
@@ -540,8 +544,6 @@ HandleModeHotkey:
 	Gosub, HandleModeHotkey
 	return
 
-^Esc:: Gosub, ExitApp
-
 ~Enter:: Gosub, selection
 !1:: Gosub, selection
 
@@ -652,7 +654,7 @@ Tab::
 			SearchInput := ""
 			PresetIndex := CachedList.Length()
 		}
-	} else if (Filtermode = "Directories" || Config.Modes.HasKey(FilterMode)) { ; recentItems-based filters
+	} else if IsRecentBased(FilterMode) {
 		if (SelectedIndex >= 1 && SelectedIndex <= ItemList.Length()) {
 			selectedItem := ItemList[SelectedIndex]
 			favLink := favFolder "\" selectedItem.title ".lnk"
@@ -709,6 +711,7 @@ Down::
 	}
 	return
 }
+^Esc:: Gosub, ExitApp
 Esc::
 GuiClose:
 	MyWindowId := 0
