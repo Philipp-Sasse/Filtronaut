@@ -175,6 +175,8 @@ Shortcuts:
  - Alt-C to toggle (C)ase sensitive search
  - Ctrl-Backspace to close the selected window or remove the recent item link or sniplet line
  - Ctrl-Plus to add the current filter text to the sniplet collection or item to favorites
+ - Ctrl-Up/Down to move the selected sniplet in the list
+ - Alt-Return to copy the selection to the filter text
  - Ctrl-H to show this beautiful little (H)elp
 )
 	Gui, +AlwaysOnTop
@@ -544,6 +546,13 @@ HandleModeHotkey:
 	Gosub, HandleModeHotkey
 	return
 
+!Enter::
+{
+	SearchInput := ItemList[SelectedIndex].title
+	ControlSetText, Edit1, %SearchInput%, Filtronaut
+	SendInput, ^a
+	return
+}
 ~Enter:: Gosub, selection
 !1:: Gosub, selection
 
