@@ -180,6 +180,7 @@ Shortcuts:
  - Ctrl-H to show this beautiful little (H)elp
 )
 	Gui, +AlwaysOnTop
+	GuiControl, Focus, SearchInput
 return
 
 ;====================
@@ -208,6 +209,7 @@ ModeChanged:
 		GuiControl, , ModeSelector, |
 		GuiControl, , ModeSelector, %modeList%
 		GuiControl, ChooseString, ModeSelector, %FilterMode%
+		GuiControl, Focus, SearchInput
 		return
 	} else if (FilterMode = "Bookmarks") {
 		EnvGet, localAppData, LOCALAPPDATA
@@ -256,6 +258,7 @@ ModeChanged:
 		WindowClassFilter :=
 	}
 	Gosub, UpdateList
+	GuiControl, Focus, SearchInput
 	return
 }
 ToggleCase:
@@ -263,6 +266,7 @@ ToggleCase:
 	GuiControlGet, CaseSensitive,, CaseToggle
 	GuiControl,, CaseToggle, % CaseSensitive ? "CaSe" : "case"
 	Gosub, UpdateList
+	GuiControl, Focus, SearchInput
 	return
 }
 ListBoxChanged:
