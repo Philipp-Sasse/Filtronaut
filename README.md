@@ -5,7 +5,7 @@ Filtronaut is a lightweight AutoHotkey utility that lets you quickly switch betw
 
 ## Features
 - Hotkey-driven mode switching (Alt-O for **O**pen windows, Alt-B for **B**ookmarks, Alt-P for recent **P**dfs, etc.)
-- Currently 8 built-in modes
+- Currently 9 built-in modes
 - Define additional modes or custom hotkeys with optional config file
 - Live filtering of items via text input with Tab completion
 - Instant activation of selected item via Return
@@ -13,22 +13,26 @@ Filtronaut is a lightweight AutoHotkey utility that lets you quickly switch betw
 
 ## How It Works
 - Press Alt-Esc to open Filtronaut (see *Config File*)
-- Start typing to filter the list
-- Press Tab to auto-complete filter text until next significant letter
-- Press Down and Up to navigate the list
-- Press Return to run or bring to front the current selection
-- Press Alt-1 to maximise the current selection on screen 1 (see *Config File*)
-- Press Ctrl-Plus to add the current input to sniplets or current item to favorites
-- Press Ctrl-Backspace to close the selected window, remove recent link or sniplet
-- Sort the sniplet list with Ctrl-Up and Ctrl-Down
-- Press Esc to close the Filtronaut
-- Press Alt-C to toggle **C**ase sensitive search
-- Switch modes using hotkeys (see *Config File*):
-    - Alt-O → **O**pen windows
+- Switch modes using hotkeys:
+    - Alt-O → **O**pen windows (default)
     - Alt-R → **R**ecent files
     - Alt-F → **F**avorites
     - Alt-B → **B**ookmarks (MS Edge only)
-    - Alt-W/X/P/D → **W**ord/e**X**cel/**P**df/**D**irectories
+    - Alt-M → **M**edia (WMP)
+    - Alt-W/X/P/D → recent **W**ord/e**X**cel/**P**df/**D**irectories
+    - Additional modes can be defined in the *Config File*
+    - Sniplet modes to filter, insert, expand, sort lines of text files (see *Sniplets*)
+- Start typing to filter the list
+- Press Alt-C to toggle **C**ase sensitive search
+- Press Tab to auto-complete filter text until next significant letter
+- Press Down and Up to navigate the list
+- Press Return to run or bring to front the current selection
+- Define hotkeys to open it on a given screen maximised or with a special geometry
+- Press Ctrl-Plus to add the current input to sniplets or current item to favorites
+- Press Ctrl-Backspace to close the selected window, remove recent link or sniplet
+- Sort the sniplet list by moving items with Ctrl-Up and Ctrl-Down
+- Copy the selection to the filter text with Alt-Return
+- Press Esc to close the Filtronaut window or Ctrl-Esc to exit the app
 - Ctrl-H for **H**elp window
 - Alternatively, use the mouse to change mode, scroll the list and select an item
 
@@ -38,8 +42,20 @@ Filtronaut is a lightweight AutoHotkey utility that lets you quickly switch betw
 - Only .lnk files are read from Favorites and Recent folders.
 - Mouse click limited to selecting the first item with the given name in the list
 
+## Sniplets ##
+In the config file, you can define Hotkeys along with a text file to be opened as list. For example,
+this could be a list a phrases you need every now and then. Type some part of the phrase you remember
+and press Return to enter the phrase in your current document. To add a phrase, type it as filter text
+(or insert it from the clipboard with Ctrl-V) and press Ctrl-+ to append it to the current sniplet list.
+
+Another use for sniplets is an e-mail address book. You can define a hotkey with a mailto: action to
+directly open your e-mail editor to send a mail to the selected person.
+
+Sniplets can also serve as a handy todo-list: always just a hotkey away, type a task during the call,
+add it with Ctrl-+. Later sort the list with Ctrl-Up/Down or delete finished tasks with Ctrl-Backspace.
+
 ## Config file
-- Plain text file named Filtronaut.config in the same folder as the script
+- Plain text file named Filtronaut.config in %APPDATA%/Filtronaut or the same folder as the script
 - One command per line: *`command`* <kbd>space</kbd> *`name`* `:` *`hotkey`* <kbd>tab</kbd> *`argument`*
 - Define Windows-Alt-B to launch in Bookmark mode: `Hotkey Launch: #!l`<kbd>tab</kbd>`Bookmarks`
 - Define Ctrl-Z as filter mode for powerpoint: `Mode powerpoint:^z`<kbd>tab</kbd>`i)\.ppt[xm]?$`
@@ -51,6 +67,7 @@ Filtronaut is a lightweight AutoHotkey utility that lets you quickly switch betw
 - Define Alt-1 to place the window to the left half of screen 1: `Monitor 1:!1`<kbd>tab</kbd>`%,0,50,5,5`
 - Define Alt-L to define a phrase library: `Sniplets PhraseLib:!l`<kbd>tab</kbd>`c:\Temp\Phraselib.txt`
 - Define Ctrl-S as Save hotkey to switch off auto-saving: `Hotkey Save: ^s`
+- See the example config files for more suggestions
 
 ## Requirements
 - AutoHotkey v1.1+

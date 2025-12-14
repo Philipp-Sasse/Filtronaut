@@ -159,7 +159,7 @@ How to Use:
  - Press Down and Up to navigate the list
  - Press Return to run or bring to front the current selection
  - Press Alt-1 to maximise the current selection on screen 1 (more keys configurable)
- - Press Esc to close the Filtronaut window
+ - Press Esc to close the Filtronaut window or Ctrl-Esc to exit the app
 
 Modes:
  - Alt-O to switch between your (O)pen windows (default)
@@ -175,12 +175,20 @@ Shortcuts:
  - Alt-C to toggle (C)ase sensitive search
  - Ctrl-Backspace to close the selected window or remove the recent item link or sniplet line
  - Ctrl-Plus to add the current filter text to the sniplet collection or item to favorites
+ - Ctrl-Up/Down to move the selected sniplet in the list
+ - Alt-Return to copy the selection to the filter text
  - Ctrl-H to show this beautiful little (H)elp
 )
 	Gui, +AlwaysOnTop
+	GuiControl, Focus, SearchInput
 return
 
 ;====================
+IsRecentBased(mode) {
+	 ;global Config
+	return  Config.Modes.HasKey(mode) || mode = "Directories"
+}
+
 ModeChanged:
 {
 	Gosub, CheckPendingSaves
@@ -194,14 +202,14 @@ ModeChanged:
 			if (line != "")
 				CachedList.Push({title: line, path: path})
 		}
-	}
-	else if (Config.Modes.HasKey(FilterMode)) {
+	} else if IsRecentBased(FilterMode) {
 		GuiControl, , ModeSelector, filtering ...
 		GuiControl, ChooseString, ModeSelector, filtering ...
 		Gosub, UpdateList
 		GuiControl, , ModeSelector, |
 		GuiControl, , ModeSelector, %modeList%
 		GuiControl, ChooseString, ModeSelector, %FilterMode%
+		GuiControl, Focus, SearchInput
 		return
 	} else if (FilterMode = "Bookmarks") {
 		EnvGet, localAppData, LOCALAPPDATA
@@ -250,6 +258,7 @@ ModeChanged:
 		WindowClassFilter :=
 	}
 	Gosub, UpdateList
+	GuiControl, Focus, SearchInput
 	return
 }
 ToggleCase:
@@ -257,6 +266,7 @@ ToggleCase:
 	GuiControlGet, CaseSensitive,, CaseToggle
 	GuiControl,, CaseToggle, % CaseSensitive ? "CaSe" : "case"
 	Gosub, UpdateList
+	GuiControl, Focus, SearchInput
 	return
 }
 ListBoxChanged:
@@ -345,7 +355,7 @@ UpdateList:
 				 GuiControl,, WindowBox, % item.title
 			 }
 		 }
-	 } else if (Filtermode = "Directories" || Config.Modes.HasKey(FilterMode)) { ; recentItems-based filters
+	} else if IsRecentBased(FilterMode) {
 		filterRegex := Config.Modes[FilterMode]
 
 		recentFolder := A_AppData "\Microsoft\Windows\Recent"
@@ -540,8 +550,13 @@ HandleModeHotkey:
 	Gosub, HandleModeHotkey
 	return
 
-^Esc:: Gosub, ExitApp
-
+!Enter::
+{
+	SearchInput := ItemList[SelectedIndex].title
+	ControlSetText, Edit1, %SearchInput%, Filtronaut
+	SendInput, ^a
+	return
+}
 ~Enter:: Gosub, selection
 !1:: Gosub, selection
 
@@ -652,7 +667,7 @@ Tab::
 			SearchInput := ""
 			PresetIndex := CachedList.Length()
 		}
-	} else if (Filtermode = "Directories" || Config.Modes.HasKey(FilterMode)) { ; recentItems-based filters
+	} else if IsRecentBased(FilterMode) {
 		if (SelectedIndex >= 1 && SelectedIndex <= ItemList.Length()) {
 			selectedItem := ItemList[SelectedIndex]
 			favLink := favFolder "\" selectedItem.title ".lnk"
@@ -709,6 +724,7 @@ Down::
 	}
 	return
 }
+^Esc:: Gosub, ExitApp
 Esc::
 GuiClose:
 	MyWindowId := 0
