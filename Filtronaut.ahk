@@ -28,7 +28,8 @@ Loop
 	if RegExMatch(line, "^\s*([^# ]\S*) +([^:]*):\s*([^\t]*)(\t+(.*))?$", match)
 	{
 		;MsgBox, Command "%match1%", target "%match2%", key "%match3%", parameter "%match5%"
-		Switch, match1 {
+		Switch, match1
+		  {
 			Case "Hotkey":
 				Switch, match2 {
 					Case "Launch": Config.Launch[match3] := match5
@@ -193,6 +194,7 @@ ModeChanged:
 {
 	Gosub, CheckPendingSaves
 	CachedList := []
+	EditedItem := ""
 	GuiControlGet, FilterMode,, ModeSelector
 	if (Config.Sniplets.HasKey(FilterMode)) {
 		path := Config.Sniplets[FilterMode]
@@ -552,9 +554,27 @@ HandleModeHotkey:
 
 !Enter::
 {
-	SearchInput := ItemList[SelectedIndex].title
-	ControlSetText, Edit1, %SearchInput%, Filtronaut
-	SendInput, ^a
+	if (EditedItem) {
+		if (Config.Sniplets.HasKey(FilterMode)) {
+			; update edited sniplet text
+			Loop, % CachedList.MaxIndex()
+			{
+				if (CachedList[A_Index].title = EditedItem) {
+					GuiControlGet, FilterText,, SearchInput
+					CachedList[A_Index].title := FilterText
+					EditedItem := FilterText
+					Gosub, SnipletsChanged
+					Gosub, UpdateList
+					break
+				}
+			}
+		}
+	} else {
+		SearchInput := ItemList[SelectedIndex].title
+		EditedItem := SearchInput ; remember to replace if edited
+		ControlSetText, Edit1, %SearchInput%, Filtronaut
+		SendInput, ^a
+	}
 	return
 }
 ~Enter:: Gosub, selection
