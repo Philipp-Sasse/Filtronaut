@@ -178,6 +178,7 @@ Shortcuts:
  - Ctrl-Plus to add the current filter text to the sniplet collection or item to favorites
  - Ctrl-Up/Down to move the selected sniplet in the list
  - Alt-Return to copy the selection to the filter text
+ - Another Alt-Return to change the copied sniplet line or rename the recent/favorites link
  - Ctrl-H to show this beautiful little (H)elp
 )
 	Gui, +AlwaysOnTop
@@ -195,6 +196,7 @@ ModeChanged:
 	Gosub, CheckPendingSaves
 	CachedList := []
 	EditedItem := ""
+	SetEditVisual(false)
 	GuiControlGet, FilterMode,, ModeSelector
 	if (Config.Sniplets.HasKey(FilterMode)) {
 		path := Config.Sniplets[FilterMode]
@@ -321,6 +323,40 @@ ResolvePath(path) {
 		  return oneDrive "\" SubStr(path, 10)
 	 } else
 		  return path
+}
+
+RenameFile(oldLink, newName) {
+	if (newName = "")
+		return ""
+	newName := RegExReplace(newName, "[<>:""/\\|?*]+", "_")
+
+	SplitPath, oldLink, , oldDir
+	newLink := oldDir "\" newName ".lnk"
+
+	if (FileExist(newLink)) {
+		MsgBox, 48, , There is already a favorite called '%newName%'.
+		return ""
+	}
+	if (!FileExist(oldLink)) {
+		MsgBox, 48, , Strange: '%EditedItem%' could not be found ('%oldLink%').
+		return ""
+	}
+	FileMove, %oldLink%, %newLink%
+	if (ErrorLevel) {
+		MsgBox, 48, , Error on renaming '%oldLink%' to '%newLink%').
+		return ""
+	}
+	return newLink
+}
+
+SetEditVisual(isOn := true) {
+	if (isOn) {
+		Gui, Font, Italic
+	} else {
+		Gui, Font, Norm
+	}
+	GuiControl, Font, SearchInput
+	Gui, Font
 }
 
 ;====================
@@ -568,15 +604,51 @@ HandleModeHotkey:
 					break
 				}
 			}
+		} else if (IsRecentBased(FilterMode)) {
+			; rename Recent-Item link
+			GuiControlGet, FilterText,, SearchInput
+			newLink := RenameFile(RecentItemList[EditedItem].link, FilterText)
+			if (newLink = "")
+				return
+			RecentItemList[EditedItem].title := FilterText
+			RecentItemList[EditedItem].link  := newLink
+			Gosub, UpdateList
+		} else if (FilterMode = "Favorites") {
+			; rename favorites link
+			GuiControlGet, FilterText,, SearchInput
+			oldLink := favFolder "\" EditedItem ".lnk"
+			newLink := RenameFile(oldLink, FilterText)
+			if (newLink = "")
+				return
+			Gosub, ModeChanged
+			EditedItem := FilterText
 		}
-	} else {
+	} else if (SelectedIndex >= 1 && SelectedIndex <= ItemList.Length()) {
 		SearchInput := ItemList[SelectedIndex].title
-		EditedItem := SearchInput ; remember to replace if edited
 		ControlSetText, Edit1, %SearchInput%, Filtronaut
 		SendInput, ^a
+
+		if (IsRecentBased(FilterMode)) {
+			; remember index to change if edited
+			sel := ItemList[SelectedIndex]
+			if (sel.HasKey("link") && sel.link != "") {
+				Loop % RecentItemList.Length() {
+					if (RecentItemList[A_Index].link = sel.link) {
+						EditedItem := A_Index
+						SetEditVisual(true)
+						break
+					}
+				}
+			}
+		} else {
+			; Sniplets & Favorites: remember old title to replace if edited
+			EditedItem := SearchInput
+			SetEditVisual(true)
+		}
 	}
 	return
 }
+
 ~Enter:: Gosub, selection
 !1:: Gosub, selection
 
