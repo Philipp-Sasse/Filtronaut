@@ -269,7 +269,6 @@ HtmlEsc(s) {
 
 ;====================
 IsRecentBased(mode) {
-	 ;global Config
 	return  Config.Modes.HasKey(mode) || mode = "Directories"
 }
 
@@ -846,6 +845,28 @@ Tab::
 			selectedItem := ItemList[SelectedIndex]
 			favLink := favFolder "\" selectedItem.title ".lnk"
 			FileCreateShortcut, % selectedItem.path, %favLink%
+		}
+	} else if (FilterMode = "Open windows") {
+		selectedItem := ItemList[SelectedIndex]
+		for window in ComObjCreate("Shell.Application").Windows
+		{
+			try {
+				if (window.HWND = selectedItem.id) {
+					favLink := favFolder "\" selectedItem.title ".lnk"
+					path := window.Document.Folder.Self.Path
+					FileCreateShortcut, %path%, %favLink%
+					; Go to favorites and edit mode to rename the new link
+					FilterMode := "Favorites"
+					GuiControl, ChooseString, ModeSelector, %FilterMode%
+					SearchInput := selectedItem.title
+					ControlSetText, Edit1, %SearchInput%, Filtronaut
+					Gosub, ModeChanged
+					SendInput, ^a
+					EditedItem := SearchInput
+					SetEditVisual(true)
+					return
+				}
+			}
 		}
 	}
 	return
