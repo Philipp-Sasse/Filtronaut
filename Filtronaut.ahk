@@ -2,11 +2,11 @@
 
 global MyWindowId := 0
 global Config := {}
-Config.FilterModes := {"!o":"openWindows", "!d":"Directories", "!f":"Favorites", "!b":"Bookmarks", "!r":"Recent", "!w":"Word", "!x":"eXcel", "!p":"Pdf", "!m":"Media"}
+Config.FilterModes := {"!O":"Open windows", "!D":"Directories", "!F":"Favorites", "!B":"Bookmarks", "!R":"Recent", "!W":"Word", "!X":"eXcel", "!P":"Pdf", "!M":"Media"}
 Config.Launch := {}
 Config.Path["Bookmarks"] := localAppData "\Microsoft\Edge\User Data\Default\Bookmarks"
 Config.Modes := {"Recent": ".", "Word": "i)\.doc[xm]?$", "eXcel": "i)\.xls[xm]?$", "Pdf": "i)\.pdf$"}
-Config.Actions["!1"] := {monitor: 1, dimensions: "x"}
+Config.Actions["!1"] := {monitor: 1, layout: "x"}
 Config.Exclude := []
 EnvGet, userProfile, USERPROFILE
 global favFolder := userProfile "\Favorites"
@@ -43,18 +43,18 @@ Loop
 							}
 				}
 			Case "Mode": {
-				Config.Filtermodes[match3] := match2
+				Config.FilterModes[match3] := match2
 				Config.Modes[match2] := match5
 				}
 			Case "Sniplets": {
-				Config.Filtermodes[match3] := match2
+				Config.FilterModes[match3] := match2
 				Config.Sniplets[match2] := ResolvePath(match5)
 			}
 			Case "Monitor": {
 					 if (!Config.Actions.HasKey(match3))
 						  Config.Actions[match3] := {}
 					 Config.Actions[match3].monitor := match2
-					 Config.Actions[match3].dimensions := match5
+					 Config.Actions[match3].layout := match5
 				}
 			Case "Action": {
 					 if (!Config.Actions.HasKey(match3))
@@ -82,7 +82,7 @@ Menu, Tray, Add, Exit, ExitApp
 Menu, Tray, Default, Help
 
 if (Config.Launch.Count() = 0)
-	Config.Launch := {"!Esc":"openWindows"}
+	Config.Launch := {"!Esc":"Open windows"}
 for hotkey, mode in Config.Launch
 	Hotkey, %hotkey%, LaunchGUI
 return
@@ -105,7 +105,7 @@ LaunchGUI:
 	if (Config.Launch.HasKey(A_ThisHotkey))
 		FilterMode := Config.Launch[A_ThisHotkey]
 	else
-		FilterMode := "openWindows"
+		FilterMode := "Open windows"
 
 	Gui, +AlwaysOnTop +ToolWindow +LastFound
 	Gui, Font, s10
@@ -149,41 +149,123 @@ LaunchGUI:
 
 ;====================
 ShowHelp:
+{
 	Gui, -AlwaysOnTop
-	MsgBox, 64, Filtronaut Help,
+	Gui, New, +AlwaysOnTop +ToolWindow +Resize, Filtronaut help
+	Gui, Margin, 12, 10
+
+	; ActiveX Browser-Control
+	Gui, Add, ActiveX, vWB w720 h480, Shell.Explorer
+
+	css :=
 	(
-The Filtronaut has the filters to navigate you to open windows, recent documents, bookmarks and more.
+	"<style>
+	  body{font:13px Candara,sans-serif; color:#111; margin:0; padding:0 0 24px 0; background:#fff;}
+	  h1{font-size:15px; margin:0 0 12px;}
+	  h2{font-size:14px; margin:16px 0 6px}
+	  kbd{font:12px Lucida,sans-serif; background:#eee; padding:0px 3px; border:1px solid #888; border-radius:7px}
+	  li{padding: 2px}
+	  table{border-collapse: collapse}
+	  td{padding: 3px; border: 1px solid #ddd}
+	</style>"
+	)
 
-How to Use:
- - Start typing to filter the list
- - Press Tab to auto-complete
- - Press Down and Up to navigate the list
- - Press Return to run or bring to front the current selection
- - Press Alt-1 to maximise the current selection on screen 1 (more keys configurable)
- - Press Esc to close the Filtronaut window or Ctrl-Esc to exit the app
+	html := "<!DOCTYPE html><html><head><meta charset='utf-8'>" css "</head><body><div class='wrap'>"
+	html .= "<h1>The Filtronaut has the filters to navigate you to open windows, recent documents, bookmarks and more.</h1>"
 
-Modes:
- - Alt-O to switch between your (O)pen windows (default)
- - Alt-F to open one of your (F)avorites
- - Alt-B to open one of your (B)ookmarks
- - Alt-R to open (R)ecently used documents or directories
- - Alt-D to open recently used (D)irectories
- - Alt-P to open recently used (P)df documents
- - Alt-W to open recently used (W)ord documents
- - Alt-X to open recently used e(X)cel sheets
+	html .= "<h2>How to Use:</h2><ul>"
+	html .= "<li>Start typing to filter the list</li>"
+	html .= "<li>Press <kbd>Tab</kbd> to auto-complete</li>"
+	html .= "<li>Press Down and Up to navigate the list</li>"
+	html .= "<li>Press <kbd>Return</kbd> to run or bring to front the current selection</li>"
+	html .= "<li>Press <kbd>Alt</kbd>+<kbd>1</kbd> to maximise the current selection on screen 1 (more keys configurable)</li>"
+	html .= "<li>Press <kbd>Esc</kbd> to close the Filtronaut window or <kbd>Ctrl</kbd>+<kbd>Esc</kbd> to exit the app</li>"
+	html .= "</ul>"
 
-Shortcuts:
- - Alt-C to toggle (C)ase sensitive search
- - Ctrl-Backspace to close the selected window or remove the recent item link or sniplet line
- - Ctrl-Plus to add the current filter text to the sniplet collection or item to favorites
- - Ctrl-Up/Down to move the selected sniplet in the list
- - Alt-Return to copy the selection to the filter text
- - Another Alt-Return to change the copied sniplet line or rename the recent/favorites link
- - Ctrl-H to show this beautiful little (H)elp
-)
-	Gui, +AlwaysOnTop
-	GuiControl, Focus, SearchInput
-return
+	if (Config.Launch.Count()) {
+		html .= "<h2>Launcher</h2>"
+		html .= RenderTable(Config.Launch)
+	}
+
+	html .= "<h2>Filter modes:</h2>"
+	html .= RenderTable(Config.FilterModes)
+
+	html .= "<h2>Other shortcuts</h2>"
+	shortcuts := {"!C":"toggle Case sensitive search"
+		, "^Backspace":"close the selected window or remove the recent item link or sniplet line"
+		, "^+":"add the current filter text to the sniplet collection or item to favorites"
+		, "^UpDown":"move the selected sniplet in the list"
+		, "!Return":"copy the selection to the filter text; further uses change the copied sniplet line or rename the recent/favorites link"
+		, "^H":"show this beautiful little Help"}
+	if (Config.Hotkey.HasKey("Save"))
+		shortcuts .= {Config.Hotkey["Save"]:"Save sniplets"}
+	html .= RenderTable(shortcuts)
+
+	if (Config.Actions.Count()) {
+		html .= "<h2>Actions</h2>"
+		html .= "<table>"
+		for hk, action in Config.Actions {
+			if (action.HasKey("monitor")) {
+				layout := StrReplace(StrReplace(StrReplace(action.layout, "x", "maximised"), "%,", "with borders "), "c", "centered")
+				desc := "open " layout " on monitor " action.monitor
+				html .= HelpRow(hk, desc)
+			}
+			if (action.HasKey("command")) {
+				scope := action.sniplet
+				desc := (scope = "*") ? "for all sniplets" : "for sniplet " scope
+				desc .= " do: <code>" HtmlEsc(action.command) "</code>"
+				html .= HelpRow(hk, desc)
+			}
+		}
+		html .= "</table>"
+	}
+	html .= "</div></body></html>"
+
+	WB.Navigate("about:blank")
+	while (WB.ReadyState != 4)
+		Sleep, 10
+	doc := WB.Document
+	doc.Open()
+	doc.Write(html)
+	doc.Close()
+
+	Gui, Show
+	return
+}
+
+HelpRow(hotkey, desc) {
+	RegExMatch(hotkey, "([!^#+<>]*)([A-Za-z]*.)$", split)
+	hotkey := RegExReplace(split1, ".[a-z]*", "<kbd>$0</kbd>")
+	hotkey := StrReplace(StrReplace(StrReplace(StrReplace(hotkey
+		, "^", "Ctrl")
+		, "!", "Alt")
+		, "#", "Win")
+		, "+", "Shift")
+	hotkey .= "<kbd>" split2 "</kbd>"
+	return "<tr><td>" StrReplace(hotkey, "><", ">+<") "</td><td>" desc "</td></tr>"
+}
+
+RenderTable(Map) {
+	table := "<table>"
+	for hotkey, mode in Map {
+		RegExMatch(hotkey, "([!^#+<>]*)([A-Za-z]*.)$", split)
+		StringCaseSense On
+		disp := StrReplace(mode, split2, "<b>" split2 "</b>",,1)
+		StringCaseSense Off
+		table  .= HelpRow(hotkey, disp)
+	}
+	table .= "</table>"
+	return table
+}
+
+HtmlEsc(s) {
+	s := StrReplace(s, "&",  "&amp;")
+	s := StrReplace(s, "<",  "&lt;")
+	s := StrReplace(s, ">",  "&gt;")
+	s := StrReplace(s, """", "&quot;")
+	s := StrReplace(s, "'",  "&#39;")
+	return s
+}
 
 ;====================
 IsRecentBased(mode) {
@@ -367,7 +449,7 @@ UpdateList:
 	ItemList := []
 	GuiControl,, WindowBox, |
 
-	if (FilterMode = "openWindows") {
+	if (FilterMode = "Open windows") {
 		if WindowClassFilter
 			WinGet, idList, List, ahk_class %WindowClassFilter%
 		else
@@ -455,7 +537,7 @@ Selection:
 		monitorNr := action.monitor
 	 } else
 		  action := {}
-	if (FilterMode = "openWindows") {
+	if (FilterMode = "Open windows") {
 		windowId := selectedItem.id
 		WinActivate, ahk_id %windowId%
 	} else if (Config.Sniplets.HasKey(FilterMode)) {
@@ -484,7 +566,7 @@ Selection:
 		}
 	}
 	if (windowId && action.monitor) {
-		dim := StrSplit(action.dimensions, ",", " ")
+		dim := StrSplit(action.layout, ",", " ")
 		; MsgBox hotkey %Hotkey%, action %action% --> Config.Actions["!1"] :: %monitorNr% ::: %dim%, 3
 		SysGet, MonitorCount, MonitorCount
 		if (monitorNr <= MonitorCount) {
@@ -506,10 +588,10 @@ Selection:
 			} else if (dim[1] = "c") {
 				WinMove, ahk_id %windowId%, , NewX, NewY, WinW, WinH
 			} else if (dim[1] = "%") {
-				NewX := MonLeft + (dim[2] * MonWidth) // 100
-				WinW := ((100 - dim[2] - dim[3]) * MonWidth) // 100
-				NewY := MonTop + (dim[4] * MonHeight) // 100
-				WinH := ((100 - dim[4] - dim[5]) * MonHeight) // 100
+				NewX := MonLeft + (dim[5] * MonWidth) // 100
+				WinW := ((100 - dim[5] - dim[3]) * MonWidth) // 100
+				NewY := MonTop + (dim[2] * MonHeight) // 100
+				WinH := ((100 - dim[2] - dim[4]) * MonHeight) // 100
 				WinMove, ahk_id %windowId%, , NewX, NewY, WinW, WinH
 			}
 		}
@@ -710,7 +792,7 @@ Tab::
 
 	selectedItem := ItemList[SelectedIndex]
 
-	if (FilterMode = "openWindows") {
+	if (FilterMode = "Open windows") {
 		windowId := selectedItem.id
 		WinClose, ahk_id %windowId%
 	} else if (Config.Sniplets.HasKey(FilterMode)) {
