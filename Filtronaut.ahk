@@ -1,23 +1,36 @@
 ; the Filtronaut switches to windows or opens recent items with given string
 
-global MyWindowId := 0
-global Config := {}
-Config.FilterModes := {"!O":"Open windows", "!D":"Directories", "!F":"Favorites", "!B":"Bookmarks", "!R":"Recent", "!W":"Word", "!X":"eXcel", "!P":"Pdf", "!M":"Media"}
+MyWindowId := 0
+Config := {}
+Config.FilterModes := {"!O":"Open windows"
+	, "!D":"Directories"
+	, "!F":"Favorites"
+	, "!B":"Bookmarks"
+	, "!R":"Recent"
+	, "!W":"Word"
+	, "!X":"eXcel"
+	, "!P":"Pdf"
+	, "!M":"Media"}
 Config.Launch := {}
 Config.Path["Bookmarks"] := localAppData "\Microsoft\Edge\User Data\Default\Bookmarks"
-Config.Modes := {"Recent": ".", "Word": "i)\.doc[xm]?$", "eXcel": "i)\.xls[xm]?$", "Pdf": "i)\.pdf$"}
+Config.Modes := {"Recent": "."
+	, "Word": "i)\.doc[xm]?$"
+	, "eXcel": "i)\.xls[xm]?$"
+	, "Pdf": "i)\.pdf$"}
 Config.Actions["!1"] := {monitor: 1, layout: "x"}
 Config.Exclude := []
 EnvGet, userProfile, USERPROFILE
-global favFolder := userProfile "\Favorites"
+favFolder := userProfile "\Favorites"
 
 ; search for config in appData, programData and scriptDir
-configFile := localAppData "\Filtronaut\Filtronaut.config"
+EnvGet, configFile, FILTRONAUT_CONFIG
+if (!configFile || !FileExist(configFile))
+	configFile := localAppData "\Filtronaut\Filtronaut.config"
 if !FileExist(configFile) {
-	 EnvGet, programData, PROGRAMDATA
-	 configFile := programData "\Filtronaut\Filtronaut.config"
-		  if !FileExist(configFile)
-				configFile := A_ScriptDir "\Filtronaut.config"
+	EnvGet, programData, PROGRAMDATA
+	configFile := programData "\Filtronaut\Filtronaut.config"
+	if !FileExist(configFile)
+		configFile := A_ScriptDir "\Filtronaut.config"
 }
 ; parse config
 Loop
@@ -29,7 +42,7 @@ Loop
 	{
 		;MsgBox, Command "%match1%", target "%match2%", key "%match3%", parameter "%match5%"
 		Switch, match1
-		  {
+		{
 			Case "Hotkey":
 				Switch, match2 {
 					Case "Launch": Config.Launch[match3] := match5
@@ -51,16 +64,16 @@ Loop
 				Config.Sniplets[match2] := ResolvePath(match5)
 			}
 			Case "Monitor": {
-					 if (!Config.Actions.HasKey(match3))
-						  Config.Actions[match3] := {}
-					 Config.Actions[match3].monitor := match2
-					 Config.Actions[match3].layout := match5
+					if (!Config.Actions.HasKey(match3))
+						Config.Actions[match3] := {}
+					Config.Actions[match3].monitor := match2
+					Config.Actions[match3].layout := match5
 				}
 			Case "Action": {
-					 if (!Config.Actions.HasKey(match3))
-						  Config.Actions[match3] := {}
-					 Config.Actions[match3].sniplet := match2
-					 Config.Actions[match3].command := match5
+					if (!Config.Actions.HasKey(match3))
+						Config.Actions[match3] := {}
+					Config.Actions[match3].sniplet := match2
+					Config.Actions[match3].command := match5
 				}
 			Case "Path": Config.Path[match2] := ResolvePath(match3)
 			Case "Exclude": Config.Exclude.Push({ scope: match2, filter: match3})
@@ -95,11 +108,11 @@ LaunchGUI:
 		WinRestore, ahk_id %MyWindowId%
 		Return
 	}
-	global CachedList := []
-	global ItemList := []
-	global SelectedIndex := 1
-	global PresetIndex := 1
-	global CaseSensitive := false
+	CachedList := []
+	ItemList := []
+	SelectedIndex := 1
+	PresetIndex := 1
+	CaseSensitive := false
 	RecentItemList := []
 	RecentItemListBuilt := false
 	if (Config.Launch.HasKey(A_ThisHotkey))
@@ -117,7 +130,7 @@ LaunchGUI:
 	Gui, Show,, Filtronaut
 	GuiControl, ChooseString, ModeSelector, %FilterMode%
 	MyWindowId := WinExist()
-	global PredefinedHotkeys := "!o,!d,!f,!b,!w,!x,!p,!r,!m,!1"
+	PredefinedHotkeys := "!o,!d,!f,!b,!w,!x,!p,!r,!m,!1"
 	for hotkey, mode in Config.FilterModes {
 		if hotkey not in %PredefinedHotkeys%
 		{
@@ -160,13 +173,13 @@ ShowHelp:
 	css :=
 	(
 	"<style>
-	  body{font:13px Candara,sans-serif; color:#111; margin:0; padding:0 0 24px 0; background:#fff;}
-	  h1{font-size:15px; margin:0 0 12px;}
-	  h2{font-size:14px; margin:16px 0 6px}
-	  kbd{font:12px Lucida,sans-serif; background:#eee; padding:0px 3px; border:1px solid #888; border-radius:7px}
-	  li{padding: 2px}
-	  table{border-collapse: collapse}
-	  td{padding: 3px; border: 1px solid #ddd}
+		body{font:13px Candara,sans-serif; color:#111; margin:0; padding:0 0 24px 0; background:#fff;}
+		h1{font-size:15px; margin:0 0 12px;}
+		h2{font-size:14px; margin:16px 0 6px}
+		kbd{font:12px Lucida,sans-serif; background:#eee; padding:0px 3px; border:1px solid #888; border-radius:7px}
+		li{padding: 2px}
+		table{border-collapse: collapse}
+		td{padding: 3px; border: 1px solid #ddd}
 	</style>"
 	)
 
@@ -204,17 +217,17 @@ ShowHelp:
 	if (Config.Actions.Count()) {
 		html .= "<h2>Actions</h2>"
 		html .= "<table>"
-		for hk, action in Config.Actions {
+		for hotkey, action in Config.Actions {
 			if (action.HasKey("monitor")) {
 				layout := StrReplace(StrReplace(StrReplace(action.layout, "x", "maximised"), "%,", "with borders "), "c", "centered")
 				desc := "open " layout " on monitor " action.monitor
-				html .= HelpRow(hk, desc)
+				html .= HelpRow(hotkey, desc)
 			}
 			if (action.HasKey("command")) {
 				scope := action.sniplet
 				desc := (scope = "*") ? "for all sniplets" : "for sniplet " scope
 				desc .= " do: <code>" HtmlEsc(action.command) "</code>"
-				html .= HelpRow(hk, desc)
+				html .= HelpRow(hotkey, desc)
 			}
 		}
 		html .= "</table>"
@@ -252,24 +265,25 @@ RenderTable(Map) {
 		StringCaseSense On
 		disp := StrReplace(mode, split2, "<b>" split2 "</b>",,1)
 		StringCaseSense Off
-		table  .= HelpRow(hotkey, disp)
+		table .= HelpRow(hotkey, disp)
 	}
 	table .= "</table>"
 	return table
 }
 
 HtmlEsc(s) {
-	s := StrReplace(s, "&",  "&amp;")
-	s := StrReplace(s, "<",  "&lt;")
-	s := StrReplace(s, ">",  "&gt;")
-	s := StrReplace(s, """", "&quot;")
-	s := StrReplace(s, "'",  "&#39;")
+	s := StrReplace(s, "&", "&amp;")
+	s := StrReplace(s, "<", "&lt;")
+	s := StrReplace(s, ">", "&gt;")
+	s := StrReplace(s, """","&quot;")
+	s := StrReplace(s, "'", "&#39;")
 	return s
 }
 
 ;====================
 IsRecentBased(mode) {
-	return  Config.Modes.HasKey(mode) || mode = "Directories"
+	global Config
+	return Config.Modes.HasKey(mode) || mode = "Directories"
 }
 
 ModeChanged:
@@ -310,7 +324,7 @@ ModeChanged:
 				currentName := nameMatch1
 			} else if (RegExMatch(line, """url"":\s*""(.*?)""", urlMatch)) {
 				CachedList.Push({title: currentName, path: urlMatch1})
-				currentName := ""  ; Reset für nächsten Block
+				currentName := ""
 			}
 		}
 	} else if (FilterMode = "Favorites") {
@@ -339,7 +353,7 @@ ModeChanged:
 			if (title != "")
 				CachedList.Push({title: title " / " artist, path: path})
 		}
-	} else  {
+	} else {
 		WindowClassFilter :=
 	}
 	Gosub, UpdateList
@@ -371,6 +385,7 @@ ListBoxChanged:
 
 ;====================
 IsExcluded(item, mode) {
+	global Config
 	Loop % Config.Exclude.Length() {
 		scope := Config.Exclude[A_Index].scope
 		filter := Config.Exclude[A_Index].filter
@@ -383,30 +398,31 @@ IsExcluded(item, mode) {
 }
 
 ResolvePath(path) {
-	 if RegExMatch(path, "^\.\\")
-		  return A_ScriptDir "\" SubStr(path, 3)
-	 else if RegExMatch(path, "^~\\") {
-		  EnvGet, userProfile, USERPROFILE
-		  return userProfile "\" SubStr(path, 3)
-	 } else if RegExMatch(path, "^appData:\\") {
-		  EnvGet, appData, APPDATA
-		  return appData "\Filtronaut\" SubStr(path, 3)
-	 } else if RegExMatch(path, "^home:\\") {
-		  EnvGet, homeShare, HOMESHARE
-		  EnvGet, homePath, HOMEPATH
-		  return homeShare homePath "\" SubStr(path, 7)
-	 } else if RegExMatch(path, "^onedrive:\\") {
-		  EnvGet, oneDrive, OneDrive
-		  if (oneDrive = "")
-				EnvGet, oneDrive, OneDriveCommercial
-		  if (oneDrive = "")
-				EnvGet, oneDrive, OneDriveConsumer
-		  return oneDrive "\" SubStr(path, 10)
-	 } else
-		  return path
+	if RegExMatch(path, "^\.\\")
+		return A_ScriptDir "\" SubStr(path, 3)
+	else if RegExMatch(path, "^~\\") {
+		EnvGet, userProfile, USERPROFILE
+		return userProfile "\" SubStr(path, 3)
+	} else if RegExMatch(path, "^appData:\\") {
+		EnvGet, appData, APPDATA
+		return appData "\Filtronaut\" SubStr(path, 3)
+	} else if RegExMatch(path, "^home:\\") {
+		EnvGet, homeShare, HOMESHARE
+		EnvGet, homePath, HOMEPATH
+		return homeShare homePath "\" SubStr(path, 7)
+	} else if RegExMatch(path, "^onedrive:\\") {
+		EnvGet, oneDrive, OneDrive
+		if (oneDrive = "")
+			EnvGet, oneDrive, OneDriveCommercial
+		if (oneDrive = "")
+			EnvGet, oneDrive, OneDriveConsumer
+		return oneDrive "\" SubStr(path, 10)
+	} else
+		return path
 }
 
 RenameFile(oldLink, newName) {
+	global EditedItem
 	if (newName = "")
 		return ""
 	newName := RegExReplace(newName, "[<>:""/\\|?*]+", "_")
@@ -443,7 +459,6 @@ SetEditVisual(isOn := true) {
 ;====================
 UpdateList:
 {
-	global ItemList, SelectedIndex, CaseSensitive, FilterMode
 	GuiControlGet, FilterText,, SearchInput
 	ItemList := []
 	GuiControl,, WindowBox, |
@@ -468,12 +483,12 @@ UpdateList:
 			}
 		}
 	} else if (FilterMode = "Favorites" || FilterMode = "Bookmarks" || FilterMode = "Media" || Config.Sniplets.HasKey(FilterMode)) {
-		 for index, item in CachedList {
-			 if InStr(item.title, FilterText) {
-				 ItemList.Push(item)
-				 GuiControl,, WindowBox, % item.title
-			 }
-		 }
+		for index, item in CachedList {
+			if InStr(item.title, FilterText) {
+				ItemList.Push(item)
+				GuiControl,, WindowBox, % item.title
+			}
+		}
 	} else if IsRecentBased(FilterMode) {
 		filterRegex := Config.Modes[FilterMode]
 
@@ -534,19 +549,19 @@ Selection:
 	if (Config.Actions.HasKey(Hotkey)) {
 		action := Config.Actions[Hotkey]
 		monitorNr := action.monitor
-	 } else
-		  action := {}
+	} else
+		action := {}
 	if (FilterMode = "Open windows") {
 		windowId := selectedItem.id
 		WinActivate, ahk_id %windowId%
 	} else if (Config.Sniplets.HasKey(FilterMode)) {
 		MyWindowId := 0
 		Gui, Destroy
-		  if (FilterMode = action.sniplet || action.sniplet = "*") {
+		if (FilterMode = action.sniplet || action.sniplet = "*") {
 			command := StrReplace(action.command, "%s", selectedItem.title)
-				Run, %command%
-		  }
-		  else
+			Run, %command%
+		}
+		else
 				SendInput, % selectedItem.title
 		return
 	} else if (FilterMode = "Media") {
@@ -554,13 +569,13 @@ Selection:
 		Run, wmplayer.exe "%path%",, UseErrorLevel
 	} else {
 		Run, % selectedItem.path,,, pid
-		  if (action.monitor) {
+		if (action.monitor) {
 				if (pid != "") {
-					 WinWait, ahk_pid %pid%,, 4
-					 windowId := WinExist("ahk_pid " pid)
+					WinWait, ahk_pid %pid%,, 4
+					windowId := WinExist("ahk_pid " pid)
 				} else {
-					 WinWaitActive,,, 4
-					 windowId := WinExist("A")
+					WinWaitActive,,, 4
+					windowId := WinExist("A")
 				}
 		}
 	}
@@ -703,6 +718,7 @@ HandleModeHotkey:
 				return
 			Gosub, ModeChanged
 			EditedItem := FilterText
+			SetEditVisual(true)
 		}
 	} else if (SelectedIndex >= 1 && SelectedIndex <= ItemList.Length()) {
 		SearchInput := ItemList[SelectedIndex].title
@@ -921,6 +937,13 @@ Down::
 }
 ^Esc:: Gosub, ExitApp
 Esc::
+	if (EditedItem) {
+		; only leave edit mode
+		EditedItem := ""
+		SetEditVisual(false)
+		return
+	}
+	; else continue:
 GuiClose:
 	MyWindowId := 0
 	Gosub, CheckPendingSaves
