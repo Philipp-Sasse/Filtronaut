@@ -32,6 +32,8 @@ Filtronaut is a lightweight AutoHotkey utility that lets you quickly switch betw
 - Press Ctrl-Backspace to close the selected window, remove recent link or sniplet
 - Sort the sniplet list by moving items with Ctrl-Up and Ctrl-Down
 - Copy the selection to the filter text with Alt-Return
+- Edit the copied selection and hit another Alt-Return to change the copied sniplet line or rename the recent/favorites link
+
 - Press Esc to close the Filtronaut window or Ctrl-Esc to exit the app
 - Ctrl-H for **H**elp window
 - Alternatively, use the mouse to change mode, scroll the list and select an item
